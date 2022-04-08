@@ -1,0 +1,25 @@
+* cherokee-webserver tiny configuration
+
+============================
+Install prefix        /usr
+CFLAGS                -g -O2
+trace                 no
+backtracing           no
+sendfile()            yes
+IPv6 support          no
+Polling method 1      epoll
+Polling method 2      poll
+Polling method 3      select
+Threading support     yes
+OpenSSL support       yes
+PCRE library          yes
+Compatible PAM        no
+Python                yes
+LDAP                  no
+MySQL                 no
+GeoIP                 no
+FFMpeg                no
+crypt support         multithread
+
+Installation dir /usr/bin
+============================
