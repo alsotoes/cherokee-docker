@@ -1,5 +1,4 @@
-FROM alpine:3.15.0
-LABEL maintainer="Alvaro Soto alvaro@headup.ws"
+FROM alpine:3.15.0 as buildlayer
 
 WORKDIR /tmp
 
@@ -30,22 +29,26 @@ RUN apk add --no-cache \
     autoreconf -iv && \
     make && make install && \
     echo "<p style='text-align:center'>Built from $(git rev-parse --short HEAD) on $(date)</p>" > /version.txt && \
-    cat /version.txt >> /var/www/index.html && \
-    apk del \
-        alpine-sdk \
-        autoconf \
-        automake \
-        gettext \
-        git \
-        libtool \
-        openssl \
-        openssl-dev \
-        python2 \
-        linux-headers && \
-    rm -rvf /tmp/*
+    cat /version.txt >> /var/www/index.html
+
+FROM alpine:3.15.0
+LABEL maintainer="Alvaro Soto alvaro@headup.ws"
+
+RUN mkdir -p /etc/cherokee/ && \
+    addgroup --gid 1001 mirror && \
+    adduser -S -u 1001 -G mirror -h /var/www/ mirror
 
 COPY cherokee.conf /etc/cherokee
+COPY --from=buildlayer /usr/share/cherokee /usr/share/cherokee
+COPY --from=buildlayer /usr/lib/libcherokee-* /usr/lib/
+COPY --from=buildlayer /usr/lib/cherokee /usr/lib/cherokee
+COPY --from=buildlayer /usr/sbin/cherokee-worker /usr/sbin/cherokee-worker
+COPY --from=buildlayer /usr/sbin/cherokee /usr/sbin/cherokee
+COPY --from=buildlayer /usr/bin/cherokee-panic /usr/bin/cherokee-panic
+COPY --from=buildlayer /version.txt /var/www/index.html
 
-EXPOSE 80 443
+WORKDIR /var/www/
+EXPOSE 80
+USER mirror
 
 CMD ["/usr/sbin/cherokee"]
